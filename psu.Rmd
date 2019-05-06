@@ -1,0 +1,450 @@
+---
+title: "Differentially Private Hypothesis Testing"
+author: "Andrew Bray"
+date: "April 9, 2019"
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: "https://platform.twitter.com/widgets.js"
+---
+
+$$\newcommand{\x}{\mathbf{x}}$$
+$$\newcommand{\xp}{\mathbf{x'}}$$
+$$\newcommand{\X}{\mathbf{X}}$$
+$$\newcommand{\Y}{\text{Y}}$$
+$$\newcommand{\N}{\text{N}}$$
+$$\renewcommand{\H}{\text{H}}$$
+$$\newcommand{\T}{\text{T}}$$
+$$\renewcommand{\P}{\text{P}}$$
+$$\renewcommand{\E}{\text{E}}$$
+
+$$\newcommand{\V}{\text{Var}}$$
+$$\newcommand{\M}{\mathcal{M}}$$
+
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 13, 
+                      message = FALSE, 
+                      warning = FALSE)
+```
+
+# While you're waiting
+
+Please flip two coins. Note the results but keep them to yourself. Later on I will ask everyone with an answer of “yes” to raise their hand according to the following rules.
+
+1. If the first coin came up H, respond truthfully to the question, “Have you ever done an illegal drug? (ecstasy, MDMA, magic mushrooms, LSD, cocaine, etc)
+2. If the first coin came up T, respond truthfully to the question, “Did your second coin come up H?”
+
+In addition to being ready with your response, think through why you would be comfortable saying it publicly or why it makes you uncomfortable.
+
+
+---
+
+# Agenda 
+
+## I. How we privatize, how it fails
+## II. Differential privacy defined
+## III. Two private mechanisms
+## IV. Private hypothesis testing
+
+---
+class: center, middle
+
+# How can I release data/statistics without 
+# compromising individual privacy?
+
+---
+class: center, middle
+background-image:url(img/141-1.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/141-2.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/141-3.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/latanya-1.png)
+background-size:cover
+
+
+---
+class: center, middle
+background-image:url(img/latanya-2.png)
+background-size:cover
+
+
+---
+class: center, middle
+background-image:url(img/latanya-3.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/latanya-4.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/latanya-5.png)
+background-size:cover
+
+---
+class: center, middle
+
+![weld-goes-down](img/weld-goes-down.gif)
+
+---
+class: center, middle
+background-image:url(img/latanya-6.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/latanya-7.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/141-4.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/netflix-1.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/netflix-2.png)
+background-size:cover
+
+---
+class: center, middle
+background-image:url(img/netflix-3.png)
+background-size:cover
+
+---
+class: remark
+
+---
+# The Promise of Differential Privacy
+
+The information learned about you by including your data in an analysis is essentially the same as would have been learned about you had you not contributed your data.
+
+--
+
+**Def.** Let $X_1, X_2, \ldots, X_n$ be a sample of size $n$ that together comprise
+the *database* with observed database $x$.  
+
+
+--
+**Def.** A *mechanism* $\mathcal{M}(\cdot)$ is a randomized function of $x$ with output $Z$.  
+
+
+--
+**Def.** $\xp$ is a *neighboring database* to $\x$ if there is only a single $i$ s.t. $\x_i \ne \xp_i$.  
+
+
+--
+**Def.** $\M$ satisfies $\epsilon$-*differential privacy* if, for all $\x, \xp$ and all 
+possible outputs $z$,
+
+$$
+\frac{\P(\M(\x) = z)}{\P(\M(\xp) = z)} \le e^\epsilon
+$$
+
+---
+
+# While you're waiting
+
+Please flip two coins. Note the results but keep them to yourself. Later on I will ask everyone with an answer of “yes” to raise their hand according to the following rules.
+
+1. If the first coin came up H, respond truthfully to the question, “Have you ever done an illegal drug? (ecstasy, MDMA, magic mushrooms, LSD, cocaine, etc)
+2. If the first coin came up T, respond truthfully to the question, “Did your second coin come up H?”
+
+In addition to being ready with your response, think through why you would be comfortable saying it publicly or why it makes you uncomfortable.
+
+---
+
+class: remark
+
+---
+
+# Randomized response
+
+**Goal:** Estimate $p = \P(X = \Y)$.
+
+--
+
+#### What distribution does $\M$ induce in $Z$?
+
+\begin{align*}
+\P(Z = Y) &= \P(Z = \Y | X = \Y)\P(X = \Y) + \P(Z = \Y | X = \N)\P(X = \N) \\
+&= \frac{3}{4}p + \frac{1}{4}(1 - p) \\
+&= \frac{1}{2}p + {1}{4}
+\end{align*}
+
+--
+
+#### What is the expected value of the sample proportion of $Z$'s?
+
+Let $W = Z_1 + Z_2 + \ldots + Z_n$.
+
+\begin{align*}
+\E(\frac{1}{n}W) &= \frac{1}{n}n(\frac{1}{2}p + {1}{4})
+&= \frac{1}{2}p + {1}{4} = \hat{p}
+\end{align*}
+
+A reasonable estimator: 
+
+$$\tilde{p} = 2\hat{p} - \frac{1}{2}$$
+
+---
+# Randomized Response
+
+### Theorem 1
+$\M_R$ is $\log(3)$-differentially private.
+
+--
+
+*Proof: Individual as curator*
+
+Each $\x$ is a singleton, so only 1 possible set of neighbors:
+
+$$ \x = \Y; \quad \xp = \N$$
+--
+
+consider when $Z = \Y$
+
+$$ \frac{\P(Z = \Y | X = \Y)}{\P(Z = \Y | X = N)} = \frac{3/4}{1/4} = 3,$$
+--
+
+and when $Z = \N$
+
+$$ \frac{\P(Z = \N | X = \Y)}{\P(Z = \N | X = N)} = \frac{3/4}{1/4} = 3.$$
+
+---
+# The Laplace Mechanism
+
+**Def.** Given any function $f$ on a database, the Laplace mechanism is
+
+$$\M_L(\x, f, \epsilon) = f(\x) + L,$$
+
+where
+
+$$L \sim \text{Lap}(\mu = 0, b = \Delta f/\epsilon).$$
+
+--
+
+### Properties of the Laplace
+
+\begin{align*}
+p(x) &= \frac{1}{2b}\exp{-\frac{|x - \mu|}{b}} \\
+\E(L) &= \mu \\
+\V(L) &= 2b^2
+\end{align*}
+
+--
+
+**Def.** The $l_1$-*sensitivity* of a function $f$ is
+
+$$
+\Delta f = \max_{\x, \xp} || f(\x) - f(\xp)||_1
+$$
+
+---
+# The Laplace Mechanism
+
+### Theorem 2
+
+The Laplace mechanism preserves $\epsilon$-differential privacy.
+
+--
+
+*Proof*  
+
+
+Denote as $Z$ the r.v. created by $\M_L(\x, f, \epsilon)$, which has pdf $p(z) = \frac{1}{2b} e^{-\frac{|z - f(\x)|}{\Delta f / \epsilon}}$. We compare the probability densities corresponding to any neighboring databases at an arbitrary point $z$.
+
+--
+
+\begin{align*}
+\frac{p(Z = z | X = \x)}{p(Z = z | X = \xp)} &= \frac{e^{-\frac{\epsilon |z - f(\x)|}{\Delta f}}}{e^{-\frac{\epsilon |z - f(\xp)|}{\Delta f}}} \\
+&= e^{\frac{\epsilon (|z - f(\x)| - |z - f(\xp)|)}{\Delta f}} \\
+&\le e^{\frac{\epsilon|f(\x) - f(\xp)|}{\Delta f}} \\
+&= e^{\frac{\epsilon||f(\x) - f(\xp)||_1}{\Delta f}} \\
+&\le e^{\epsilon}
+\end{align*}
+
+where the first inequality follows from the triangle inequality and the last from the definition of sensitivity.
+
+
+---
+
+class: remark
+
+---
+# $\M_R$ vs. $\M_L$
+
+--
+
+### Generality
+
+--
+
+$\M_R$ only works for Bernoulli data and output; $\M_L$ works on any continuous output.
+
+--
+
+### Privacy
+
+--
+
+$\M_R$ is fixed at $\epsilon = \log(3)$; $\M_L$ works with any $\epsilon$ (including $\log(3)$).
+
+--
+
+### Utility
+
+--
+
+Compare variance of estimators.
+
+$$\M_R: \frac{3}{4n} + \frac{p(1-p)}{n}$$
+
+$$\M_L: \frac{2}{(\log(3)n)^2}$$
+
+---
+# Key Points of Differential Privacy
+
+1. Privacy requires a good definition.
+
+--
+
+2. Private mechanisms are easier to think about than private outputs.
+
+--
+
+3. Differential privacy adds noise to keep the amount learned about an individual
+within provable bounds.
+
+--
+
+4. The focus has been on making private algorithms, not finding statistically
+useful ones.
+
+
+
+---
+# Differentially Private Hypothesis Testing
+
+### A plan for adaptation
+
+1. Identify classical test
+
+--
+
+2. Bound $\Delta f$
+
+--
+
+3. Construct $\M$ that satisfies $\epsilon$-differential privacy
+
+--
+
+4. Determine distribution of $Z$ (the private test statistic) under $H_0$
+
+--
+### Tests of interest
+
+- One-way ANOVA
+- Wilcoxon Signed Rank
+- Kruskal-Wallace
+- Mann-Whitney U
+
+---
+# Wilcoxon Signed Rank
+
+### 1. Identify classical test
+
+*Goal*: Decide if paired data is consistent with a model where both sets are drawn from the same dist.
+
+--
+
+![wil](img/wilcoxon.png)
+
+---
+# Wilcoxon Signed Rank
+
+### 2. Bound $\Delta f$
+
+- How many different ways can two databases be neighboring?
+- In what ways can the changed observation shift?
+- Sensitivity is the maximum shift.
+
+--
+
+$$\Delta f = 2n$$
+
+---
+# Wilcoxon Signed Rank
+
+### 3. Construct $\M$ that satisfies $\epsilon$-differential privacy
+
+--
+
+```{r out.width=500, echo = FALSE}
+knitr::include_graphics("img/wilcoxon-algo.png")
+```
+
+---
+# Wilcoxon Signed Rank
+
+### 4. Determine distribution of $Z$ under $H_0$
+
+--
+
+1. Randomly draw two iid sets of size $n$ from a distribution
+2. Compute $\widehat{\mathcal{W}\mathcal{P}}$
+3. Repeat (1-2) many times
+
+
+---
+
+```{r out.width=800, echo = FALSE}
+knitr::include_graphics("img/wilcoxon-power.png")
+```
+
+
+---
+
+# Collaborators
+- Adam Groce
+- Anna Ritz
+- Ira Globus-Harris
+- Marika Swanberg
+- Iris Griffith
+- Simon Couch
+- Kaiyan Shi
+- Zeki Kazan
+
+# References
+
+- Dwork C., McSherry F., Nissim K., Smith A. (2006). *Calibrating Noise to Sensitivity in Private Data Analysis*. Third Theory of Cryptography Conference
+- Dwork C. and Roth A. (2014). *The Algorithmic Foundations of Differential Privacy*. Foundations and Trends in
+Theoretical Computer Science.
+- Nissim K. (2018). *Differential Privacy: A Concise Tutorial*. IPAM Conference, UCLA.
+
+
+This material is based upon work supported by the NSF Grant No. SaTC-1817245 and the Richter Funds. 
